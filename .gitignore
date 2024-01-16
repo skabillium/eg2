@@ -1,0 +1,16 @@
+# Node
+node_modules/
+npm-debug.log
+
+# Build files
+bin/
+
+# Misc files
+misc/
+.DS_Store
+
+# Environment
+.env
+
+# Eg2 files
+.eg2/
