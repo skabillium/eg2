@@ -5,11 +5,11 @@
   "license": "MIT",
   "keywords": [],
   "bin": {
-    "eg2": "bin/eg2.js"
+    "eg2": "bin/cli.js"
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/eg2.ts",
+    "dev": "tsx src/cli.ts",
     "tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
