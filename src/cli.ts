@@ -14,11 +14,14 @@ import {
  * The cli uses AWS SSM to store environment variables. Since SSM is a key-value store
  * we need to distinguish each app's variables by app name and also stage (eg. production,
  * quality, development). We could use the following key structure:
- * - /eg2/{appName}/{stage}/{variable}
+ * - /eg2/{service}/{stage}/{variable}
  */
 
-// TODO: Handle all process errors gracefully
-// TODO: Check if we need to add a default region to config
+/**
+ * TODO:
+ * - [ ] Check if we need to add a default region to config
+ * - [ ] Use dependency injection for the SSM client, will help with future abstractions
+ */
 
 type EnvironmentOptions = {
     service: string;
@@ -27,7 +30,6 @@ type EnvironmentOptions = {
 
 const CACHE_DIR = join(process.cwd(), '.eg2');
 const METADATA = join(CACHE_DIR, 'metadata.json');
-const PACKAGE_JSON = join(process.cwd(), 'package.json');
 
 const Placeholder = {
     service: 'eg2-app',
@@ -46,9 +48,49 @@ async function dirExists(path: string): Promise<boolean> {
     }
 }
 
-async function bootstrap() {
-    console.log('Bootstraping application...');
+function areValidOptions(opts: EnvironmentOptions) {
+    return (
+        opts.service !== null &&
+        opts.service !== undefined &&
+        opts.service !== '' &&
+        opts.stage !== null &&
+        opts.stage !== undefined &&
+        opts.stage !== ''
+    );
+}
 
+/**
+ * Validate and return options passed to the cli. If empty try to fetch them from
+ * the cached "metadata.json" file. If it's not found there either throw error.
+ * @param opts Command line options
+ */
+async function options(opts: EnvironmentOptions) {
+    let env = opts;
+    if (!areValidOptions(opts)) {
+        try {
+            const cached = await import(METADATA);
+            env = cached.default;
+        } catch (err) {
+            if (err.code === 'ERR_MODULE_NOT_FOUND') {
+                // TODO: Maybe handle this differently once logs are implemented.
+                err.message = 'Options "--service" and "--stage" are required';
+            }
+
+            throw err;
+        }
+    }
+    return env;
+}
+
+/**
+ * Fetch environment options from the cached "metadata.json" file.
+ */
+async function useCache() {
+    const cached = await import(METADATA);
+    return cached.default;
+}
+
+async function config() {
     // Get input for default stage
     const readline = await import('readline/promises');
     const rl = readline.createInterface({
@@ -59,14 +101,9 @@ async function bootstrap() {
         `Give a default stage for your variables (${Placeholder.stage}): `,
     );
 
-    // Read service name from package.json, else prompt again
-    const pkg = await import(PACKAGE_JSON);
-    let service = pkg?.eg2?.service;
-    if (!service) {
-        service = await rl.question(
-            `Give a name for your service (${Placeholder.service}): `,
-        );
-    }
+    const service = await rl.question(
+        `Give a name for your service (${Placeholder.service}): `,
+    );
 
     rl.close();
 
@@ -85,21 +122,6 @@ async function bootstrap() {
     }
 
     await fs.writeFile(METADATA, JSON.stringify(env), 'utf8');
-
-    return env;
-}
-
-async function service(): Promise<EnvironmentOptions> {
-    try {
-        const { default: env } = await import(METADATA);
-        return env as EnvironmentOptions;
-    } catch (err) {
-        if (err.code === 'ERR_MODULE_NOT_FOUND') {
-            // First time running or "eg2" dir deleted, initialize it
-            return bootstrap();
-        }
-        process.exit(1); // TODO: Throw error once all process errors are handled
-    }
 }
 
 function storageKey(name: string, env: EnvironmentOptions) {
@@ -110,9 +132,8 @@ function storagePath(env: EnvironmentOptions) {
     return `/eg2/${env.service}/${env.stage}`;
 }
 
-// TODO: Inject the SSM client
-async function set(name: string, value: string) {
-    const env = await service();
+async function set(name: string, value: string, opts: EnvironmentOptions) {
+    const env = await options(opts);
     const key = storageKey(name, env);
 
     await ssm.send(
@@ -121,15 +142,17 @@ async function set(name: string, value: string) {
             Value: value,
             Type: 'SecureString',
             Overwrite: true,
+            Tier: value.length > 4096 ? 'Advanced' : 'Standard',
         }),
     );
 
     console.log(`Set ${key} to ${value}`);
 }
 
-async function get(name: string) {
+async function get(name: string, opts: EnvironmentOptions) {
     try {
-        const env = await service();
+        const env = await options(opts);
+
         const param = await ssm.send(
             new GetParameterCommand({
                 Name: storageKey(name, env),
@@ -143,12 +166,13 @@ async function get(name: string) {
             console.log(`Variable ${name} has not been set`);
             return;
         }
-        console.log(err);
+        throw err;
     }
 }
 
-async function list() {
-    const env = await service();
+async function list(opts: EnvironmentOptions) {
+    const env = await options(opts);
+
     const params = await ssm.send(
         new GetParametersByPathCommand({
             Path: storagePath(env),
@@ -164,9 +188,9 @@ async function list() {
     );
 }
 
-async function remove(name: string) {
+async function remove(name: string, opts: EnvironmentOptions) {
     try {
-        const env = await service();
+        const env = await options(opts);
         await ssm.send(
             new DeleteParameterCommand({ Name: storageKey(name, env) }),
         );
@@ -176,11 +200,13 @@ async function remove(name: string) {
             console.log(`Variable ${name} has not been set`);
             return;
         }
-        console.log(err);
+        throw err;
     }
 }
 
-async function load(path: string) {
+async function load(path: string, opts: EnvironmentOptions) {
+    const env = await options(opts);
+
     const { readFile } = await import('fs/promises');
     const { parse } = await import('dotenv');
     const envfile = await readFile(path);
@@ -188,16 +214,17 @@ async function load(path: string) {
     const variables = parse(envfile);
     let totalVars = 0;
     for (let name in variables) {
-        await set(name, variables[name]);
+        await set(name, variables[name], env);
         totalVars++;
     }
 
     console.log(`Successfully uploaded ${totalVars} environment variables`);
 }
 
-async function exportEnv(path: string) {
+async function exportEnv(path: string, opts: EnvironmentOptions) {
+    const env = await options(opts);
+
     const { writeFile } = await import('fs/promises');
-    const env = await service();
     const params = await ssm.send(
         new GetParametersByPathCommand({
             Path: storagePath(env),
@@ -217,10 +244,36 @@ async function exportEnv(path: string) {
     console.log('Exported environment file to', path);
 }
 
-async function run() {
-    // TODO: Download env and spawn process
-    const info = await service();
-    console.log(info);
+async function run(args: string[], opts: EnvironmentOptions) {
+    const env = await options(opts);
+
+    const params = await ssm.send(
+        new GetParametersByPathCommand({
+            Path: storagePath(env),
+            WithDecryption: true,
+        }),
+    );
+
+    const fetchedEnv = {};
+    params.Parameters.forEach((p) => {
+        fetchedEnv[p.Name.split('/').pop()] = p.Value;
+    });
+
+    const { spawn } = await import('child_process');
+    const cmd = args.shift();
+
+    const proc = spawn(cmd, args, {
+        stdio: 'inherit',
+        env: { ...process.env, ...fetchedEnv },
+    });
+
+    proc.on('close', (code, signal) => {
+        if (typeof code === 'number') {
+            process.exit(code);
+        } else {
+            process.kill(process.pid, signal);
+        }
+    });
 }
 
 // TODO: Handle large values
@@ -257,9 +310,16 @@ function printVars(vars: { name: string; value: string }[]) {
     );
 }
 
+async function dg(opts: EnvironmentOptions) {
+    const env = await options(opts);
+    console.log(env);
+}
+
 program
     .name('eg2')
     .description('Cloud environment manager for AWS SSM')
+    .option('--stage <stage>', 'Specify the stage for the command')
+    .option('--service <service>', 'Specify the service for the command')
     .version('0.0.1');
 
 program
@@ -267,42 +327,51 @@ program
     .description('Set a new environment variable')
     .argument('<name>', 'Variable name')
     .argument('<value>', 'Variable value')
-    .action(set);
+    .action((name: string, value: string) => set(name, value, program.opts()));
 
 program
     .command('get')
     .description('Get an environment variable')
     .argument('<name>')
-    .action(get);
+    .action((name: string) => get(name, program.opts()));
 
 program
     .command('list')
     .alias('ls')
     .description('List all environment variables')
-    .action(list);
+    .action(() => list(program.opts()));
 
 program
     .command('remove')
     .alias('rm')
     .description('Remove an environment variable')
     .argument('<name>', 'Variable name')
-    .action(remove);
+    .action((name: string) => remove(name, program.opts()));
 
 program
     .command('load')
     .description('Load environment from file')
     .argument('<path>', 'Path to environment file')
-    .action(load);
+    .action((path: string) => load(path, program.opts()));
 
 program
     .command('export')
     .description('Export environment to .env file')
     .argument('<path>', 'Path for exported .env file')
-    .action(exportEnv);
+    .action((path: string) => exportEnv(path, program.opts()));
 
 program
-    .command('run')
+    .command('run [cmd...]')
     .description('Run a command with environment variables')
-    .action(run);
+    .action((args: string[]) => run(args, program.opts()));
+
+program
+    .command('config')
+    .description('Configure defaults for cli')
+    .action(config);
+
+program.command('dg').action(() => dg(program.opts()));
 
 program.parse();
+
+process.on('uncaughtException', (err) => console.log('Error:', err.message));
