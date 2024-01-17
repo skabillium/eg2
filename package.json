@@ -9,18 +9,16 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/cli.ts",
-    "tsc": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.2",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "dev": "tsx src/cli.ts"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.490.0",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
   }
 }
