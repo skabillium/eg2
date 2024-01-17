@@ -10,23 +10,12 @@ import {
     ParameterNotFound,
 } from '@aws-sdk/client-ssm';
 
-/**
- * The cli uses AWS SSM to store environment variables. Since SSM is a key-value store
- * we need to distinguish each app's variables by app name and also stage (eg. production,
- * quality, development). We could use the following key structure:
- * - /eg2/{service}/{stage}/{variable}
- */
-
-/**
- * TODO:
- * - [ ] Check if we need to add a default region to config
- * - [ ] Use dependency injection for the SSM client, will help with future abstractions
- */
-
 type EnvironmentOptions = {
     service: string;
     stage: string;
 };
+
+const ssm = new SSMClient();
 
 const CACHE_DIR = join(process.cwd(), '.eg2');
 const METADATA = join(CACHE_DIR, 'metadata.json');
@@ -35,8 +24,6 @@ const Placeholder = {
     service: 'eg2-app',
     stage: userInfo().username,
 };
-
-const ssm = new SSMClient();
 
 async function dirExists(path: string): Promise<boolean> {
     const fs = await import('fs/promises');
@@ -63,6 +50,7 @@ function areValidOptions(opts: EnvironmentOptions) {
  * Validate and return options passed to the cli. If empty try to fetch them from
  * the cached "metadata.json" file. If it's not found there either throw error.
  * @param opts Command line options
+ * @todo Each CLI param should take precedence over the cached value
  */
 async function options(opts: EnvironmentOptions) {
     let env = opts;
@@ -70,6 +58,12 @@ async function options(opts: EnvironmentOptions) {
         try {
             const cached = await import(METADATA);
             env = cached.default;
+
+            for (let key in opts) {
+                if (opts[key]) {
+                    env[key] = opts[key];
+                }
+            }
         } catch (err) {
             if (err.code === 'ERR_MODULE_NOT_FOUND') {
                 // TODO: Maybe handle this differently once logs are implemented.
