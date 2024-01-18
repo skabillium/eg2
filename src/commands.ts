@@ -1,6 +1,7 @@
-import { dirExists, printSecrets } from './util';
+import { dirExists, printSecrets, printStrings } from './util';
 import { useSecretsClient, EnvironmentOptions } from './secrets-client';
 import { CACHE_DIR, DEFAULTS_FILE, Placeholder, options } from './config';
+import { SecretsClientSSM } from 'ssm-client';
 
 export async function config() {
     // Get input for default stage
@@ -144,4 +145,12 @@ export async function run(args: string[], opts: EnvironmentOptions) {
             process.kill(process.pid, signal);
         }
     });
+}
+
+export async function stages(opts: EnvironmentOptions) {
+    const env = await options(opts);
+    const ssm = useSecretsClient(env);
+
+    const stages = await ssm.stages();
+    printStrings('Stages', stages);
 }

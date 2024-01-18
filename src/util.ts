@@ -50,3 +50,18 @@ export function printSecrets(secrets: Secret[]) {
         '└'.padEnd(keyLen + 3, '─') + '┴' + ''.padEnd(valueLen + 2, '─') + '┘',
     );
 }
+
+export function printStrings(label: string, values: string[]) {
+    const valueLen = Math.max(label.length, ...values.map((v) => v.length));
+    console.log('┌'.padEnd(valueLen + 3, '─') + '┐');
+    console.log(`│ ${label.padEnd(valueLen)} │`);
+    console.log('├'.padEnd(valueLen + 3, '─') + '┤');
+
+    values.sort();
+
+    values.forEach((v) => {
+        console.log(`| ${v.padEnd(valueLen)} |`);
+    });
+
+    console.log('└'.padEnd(valueLen + 3, '─') + '┘');
+}

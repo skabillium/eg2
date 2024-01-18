@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/cli.ts"
+    "start": "tsx src/cli.ts"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.490.0",

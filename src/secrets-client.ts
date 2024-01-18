@@ -13,6 +13,7 @@ export interface SecretsClient {
     get(name: string): Promise<Secret>;
     remove(name: string): Promise<boolean>;
     list(): Promise<Secret[]>;
+    stages(): Promise<string[]>;
     key(name: string): string;
 }
 

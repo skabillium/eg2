@@ -8,6 +8,7 @@ import {
     exportEnv,
     run,
     config,
+    stages,
 } from './commands';
 
 program
@@ -64,6 +65,11 @@ program
     .command('config')
     .description('Configure defaults for cli')
     .action(config);
+
+program
+    .command('stages')
+    .description('Get all available stages')
+    .action(stages);
 
 program.parse();
 
