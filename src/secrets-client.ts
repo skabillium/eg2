@@ -1,4 +1,4 @@
-import { SecretsClientSSM } from 'ssm-client';
+import { SecretsClientSSM } from './ssm-client';
 
 export type EnvironmentOptions = {
     service: string;

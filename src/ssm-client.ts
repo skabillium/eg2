@@ -6,7 +6,7 @@ import {
     DeleteParameterCommand,
     ParameterNotFound,
 } from '@aws-sdk/client-ssm';
-import { SecretsClient, Secret, EnvironmentOptions } from 'secrets-client';
+import type { SecretsClient, Secret, EnvironmentOptions } from 'secrets-client';
 
 export class SecretsClientSSM implements SecretsClient {
     ssm: SSMClient;

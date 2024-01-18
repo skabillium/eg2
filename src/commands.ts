@@ -1,7 +1,6 @@
 import { dirExists, printSecrets, printStrings } from './util';
-import { useSecretsClient, EnvironmentOptions } from './secrets-client';
+import { useSecretsClient, type EnvironmentOptions } from './secrets-client';
 import { CACHE_DIR, DEFAULTS_FILE, Placeholder, options } from './config';
-import { SecretsClientSSM } from 'ssm-client';
 
 export async function config() {
     // Get input for default stage

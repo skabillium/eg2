@@ -1,10 +1,9 @@
-import { Secret } from './secrets-client';
+import type { Secret } from './secrets-client';
 /**
  * Check if a given directory exists in the file system
  * @param path Path to check
- * @returns {boolean} If the directory exists
  */
-export async function dirExists(path: string): Promise<boolean> {
+export async function dirExists(path: string) {
     const fs = await import('fs/promises');
     try {
         const stat = await fs.stat(path);
@@ -20,7 +19,7 @@ export async function dirExists(path: string): Promise<boolean> {
  */
 export function printSecrets(secrets: Secret[]) {
     const keyLen = Math.max(
-        'Variables'.length,
+        'Secrets'.length,
         ...secrets.map((v) => v.name.length),
     );
     const valueLen = Math.max(
@@ -32,7 +31,7 @@ export function printSecrets(secrets: Secret[]) {
         '┌'.padEnd(keyLen + 3, '─') + '┬' + ''.padEnd(valueLen + 2, '─') + '┐',
     );
     console.log(
-        `│ ${'Variables'.padEnd(keyLen)} │ ${'Values'.padEnd(valueLen)} │`,
+        `│ ${'Secrets'.padEnd(keyLen)} │ ${'Values'.padEnd(valueLen)} │`,
     );
     console.log(
         '├'.padEnd(keyLen + 3, '─') + '┼' + ''.padEnd(valueLen + 2, '─') + '┤',
@@ -51,6 +50,11 @@ export function printSecrets(secrets: Secret[]) {
     );
 }
 
+/**
+ * Print a list of strings as a table
+ * @param label Label for the table
+ * @param values Values to print
+ */
 export function printStrings(label: string, values: string[]) {
     const valueLen = Math.max(label.length, ...values.map((v) => v.length));
     console.log('┌'.padEnd(valueLen + 3, '─') + '┐');

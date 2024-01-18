@@ -12,7 +12,7 @@ secrets.
 
 ## Installation
 
-You will need at least (Node.js 18)[https://nodejs.org/en] and (npm 7)[https://www.npmjs.com/]. Lastly make sure to (configure your AWS credentials)[https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html]
+You will need at least [Node.js 18](https://nodejs.org/en) and [npm 7](https://www.npmjs.com/). Lastly make sure to [configure your AWS credentials](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
 locally.
 
 After all that you can install the cli globaly:
@@ -51,7 +51,7 @@ Run `eg2 --help` for a more detailed specification.
 
 The cli uses AWS SSM to store environment variables. Since SSM is a key value store each application's
 secrets have their own prefix, for the example application `my-api` you can find all variables stored
-in the Systems Manager Dashboard under the prefix `/eg2/my-api/{stage}/{secret}`. So you set a
+in the Systems Manager Dashboard under the prefix `/eg2/my-api/{stage}/{secret}`. So when you set a
 secret `PASSWORD` for the `development` stage it will be saved as `/eg2/my-api/development/PASSWORD`.
 
 ## IAM Credentials
@@ -72,8 +72,8 @@ The permissions needed for all the basic operations are the following:
                 "ssm:DeleteParameter"
             ],
             "Resource": [
-                "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/YOUR_PARAMETER_STORE_PATH",
-                "arn:aws:ssm:REGION:ACCOUNT_ID:parameter/YOUR_PARAMETER_STORE_PATH/*"
+                "arn:aws:ssm:{REGION}:{ACCOUNT_ID}:parameter/{YOUR_PARAMETER_STORE_PATH}",
+                "arn:aws:ssm:{REGION}:{ACCOUNT_ID}:parameter/{YOUR_PARAMETER_STORE_PATH}/*"
             ]
         }
     ]

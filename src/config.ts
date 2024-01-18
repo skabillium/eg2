@@ -1,6 +1,6 @@
 import { userInfo } from 'os';
 import { join } from 'path';
-import { EnvironmentOptions } from './secrets-client';
+import { type EnvironmentOptions } from './secrets-client';
 
 export const CACHE_DIR = join(process.cwd(), '.eg2');
 export const DEFAULTS_FILE = join(CACHE_DIR, 'defaults.json');
