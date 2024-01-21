@@ -42,17 +42,17 @@ export async function set(
     opts: EnvironmentOptions,
 ) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
-    await ssm.set(name, value);
-    console.log(`Set ${ssm.key(name)} to ${value}`);
+    await client.set(name, value);
+    console.log(`Set ${client.key(name)} to ${value}`);
 }
 
 export async function get(name: string, opts: EnvironmentOptions) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
-    const secret = await ssm.get(name);
+    const secret = await client.get(name);
     if (secret === null) {
         console.log('Secret', name, 'has not been set');
         return;
@@ -63,18 +63,18 @@ export async function get(name: string, opts: EnvironmentOptions) {
 
 export async function list(opts: EnvironmentOptions) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
-    const secrets = await ssm.list();
+    const secrets = await client.list();
 
     printSecrets(secrets);
 }
 
 export async function remove(name: string, opts: EnvironmentOptions) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
-    const removed = await ssm.remove(name);
+    const removed = await client.remove(name);
 
     if (!removed) {
         console.log('An error ocurred while removing', name);
@@ -86,7 +86,7 @@ export async function remove(name: string, opts: EnvironmentOptions) {
 
 export async function load(path: string, opts: EnvironmentOptions) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
     const { readFile } = await import('fs/promises');
     const { parse } = await import('dotenv');
@@ -95,7 +95,7 @@ export async function load(path: string, opts: EnvironmentOptions) {
     const variables = parse(envfile);
     let totalVars = 0;
     for (let name in variables) {
-        await ssm.set(name, variables[name]);
+        await client.set(name, variables[name]);
         totalVars++;
     }
 
@@ -104,11 +104,11 @@ export async function load(path: string, opts: EnvironmentOptions) {
 
 export async function exportEnv(path: string, opts: EnvironmentOptions) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
     const { writeFile } = await import('fs/promises');
 
-    const secrets = await ssm.list();
+    const secrets = await client.list();
     const content = secrets.reduce<string>(
         (c, s) => c + `${s.name}="${s.value}"\n`,
         '',
@@ -120,9 +120,9 @@ export async function exportEnv(path: string, opts: EnvironmentOptions) {
 
 export async function run(args: string[], opts: EnvironmentOptions) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
-    const secrets = await ssm.list();
+    const secrets = await client.list();
 
     const fetchedEnv = {};
     secrets.forEach((s) => {
@@ -148,8 +148,8 @@ export async function run(args: string[], opts: EnvironmentOptions) {
 
 export async function stages(opts: EnvironmentOptions) {
     const env = await options(opts);
-    const ssm = useSecretsClient(env);
+    const client = useSecretsClient(env);
 
-    const stages = await ssm.stages();
+    const stages = await client.stages();
     printStrings('Stages', stages);
 }
