@@ -30,8 +30,9 @@
   "scripts": {
     "start": "tsx src/cli.ts",
     "build": "tsc",
+    "clean": "rimraf bin",
     "prepack": "pnpm run build",
-    "prepublishOnly": "pnpm run pack"
+    "prepublishOnly": "pnpm run clean && pnpm run build"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.490.0",
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.2",
+    "rimraf": "^5.0.5",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }
