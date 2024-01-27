@@ -16,7 +16,7 @@ program
     .description('Cloud environment manager for AWS SSM')
     .option('--stage <stage>', 'Specify the stage for the command')
     .option('--service <service>', 'Specify the service for the command')
-    .version('1.0.0');
+    .version('0.5.0');
 
 program
     .command('set')

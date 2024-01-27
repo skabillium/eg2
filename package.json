@@ -1,6 +1,6 @@
 {
   "name": "eg2",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "CLI for managing cloud secrets",
   "homepage": "https://github.com/skabillium/eg2",
   "license": "MIT",
@@ -11,6 +11,14 @@
   "bugs": {
     "url": "https://github.com/skabillium/eg2/issues"
   },
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
     "environment",
     "secret",
@@ -20,8 +28,10 @@
     "eg2": "bin/cli.js"
   },
   "scripts": {
+    "start": "tsx src/cli.ts",
     "build": "tsc",
-    "start": "tsx src/cli.ts"
+    "prepack": "pnpm run build",
+    "prepublishOnly": "pnpm run pack"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.490.0",
