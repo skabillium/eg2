@@ -67,6 +67,11 @@ export async function list(opts: EnvironmentOptions) {
 
     const secrets = await client.list();
 
+    if (secrets.length === 0) {
+        console.log(`No serets set for stage "${env.stage}"`);
+        return;
+    }
+
     printSecrets(secrets);
 }
 
@@ -151,6 +156,11 @@ export async function stages(opts: EnvironmentOptions) {
     const client = useSecretsClient(env);
 
     const stages = await client.stages();
+
+    if (stages.length === 0) {
+        console.log(`No stages for service "${env.service}"`);
+        return;
+    }
 
     printStrings('Stages', stages);
 }
