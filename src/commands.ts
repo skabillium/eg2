@@ -147,9 +147,10 @@ export async function run(args: string[], opts: EnvironmentOptions) {
 }
 
 export async function stages(opts: EnvironmentOptions) {
-    const env = await options(opts);
+    const env = await options(opts, ['service']);
     const client = useSecretsClient(env);
 
     const stages = await client.stages();
+
     printStrings('Stages', stages);
 }

@@ -69,7 +69,7 @@ program
 program
     .command('stages')
     .description('Get all available stages')
-    .action(stages);
+    .action(() => stages(program.opts()));
 
 program.parse();
 

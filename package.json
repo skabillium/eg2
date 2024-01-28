@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.490.0",
+    "c12": "^1.6.1",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1"
   },
@@ -44,5 +45,8 @@
     "rimraf": "^5.0.5",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
+  },
+  "eg2": {
+    "service": "pack-service"
   }
 }

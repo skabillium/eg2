@@ -1,5 +1,6 @@
 import { userInfo } from 'os';
 import { join } from 'path';
+import { loadConfig } from 'c12';
 import { type EnvironmentOptions } from './secrets-client';
 
 export const CACHE_DIR = join(process.cwd(), '.eg2');
@@ -10,49 +11,56 @@ export const Placeholder = {
     stage: userInfo().username,
 };
 
-function areValidOptions(opts: EnvironmentOptions) {
-    return (
-        opts.service !== null &&
-        opts.service !== undefined &&
-        opts.service !== '' &&
-        opts.stage !== null &&
-        opts.stage !== undefined &&
-        opts.stage !== ''
-    );
-}
+type Validator<T> = {
+    [K in keyof T]: (value: any) => boolean;
+};
+
+const EnvironmentValidator: Validator<EnvironmentOptions> = {
+    service: (service: string) =>
+        typeof service === 'string' && service.length > 0,
+    stage: (service: string) =>
+        typeof service === 'string' && service.length > 0,
+};
 
 /**
  * Fetch environment options from the cached "metadata.json" file.
+ * Does not throw on error, it just returns null.
  */
 async function useCache() {
-    const cached = await import(DEFAULTS_FILE);
-    return cached.default;
+    try {
+        const { default: cached } = await import(
+            join(process.cwd(), '.eg2/defaults.json')
+        );
+        return cached;
+    } catch (err) {
+        return null;
+    }
 }
 
 /**
- * Validate and return options passed to the cli. If empty try to fetch them from
- * the cached "metadata.json" file. If it's not found there either throw error.
+ * Load configuration with the following priority:
+ * 1. Overrides passed to the CLI
+ * 2. package.json settings
+ * 3. Saved config to .eg2/defaults.json
  * @param opts Command line options
+ * @param validate Options to validate after fetching
  */
-export async function options(opts: EnvironmentOptions) {
-    let env = opts;
-    if (!areValidOptions(opts)) {
-        try {
-            env = await useCache();
+export async function options(
+    overrides: EnvironmentOptions,
+    validate: Array<keyof EnvironmentOptions> = ['service', 'stage'],
+) {
+    const cached = await useCache();
+    const { config } = await loadConfig({
+        overrides,
+        packageJson: 'eg2',
+        defaults: cached,
+    });
 
-            for (let key in opts) {
-                if (opts[key]) {
-                    env[key] = opts[key];
-                }
-            }
-        } catch (err) {
-            if (err.code === 'ERR_MODULE_NOT_FOUND') {
-                // TODO: Create a new error to avoid confusing logs
-                err.message = 'Options "--service" and "--stage" are required';
-            }
-
-            throw err;
+    validate.forEach((prop) => {
+        if (!EnvironmentValidator[prop](config[prop])) {
+            throw new Error(`Option "--${prop}" is missing`);
         }
-    }
-    return env;
+    });
+
+    return config as EnvironmentOptions;
 }
