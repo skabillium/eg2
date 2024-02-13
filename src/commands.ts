@@ -164,3 +164,17 @@ export async function stages(opts: EnvironmentOptions) {
 
     printStrings('Stages', stages);
 }
+
+export async function services(opts: EnvironmentOptions) {
+    const env = await options(opts, ['service']);
+    const client = useSecretsClient(env);
+
+    const services = await client.services();
+
+    if (services.length === 0) {
+        console.log('No services found');
+        return;
+    }
+
+    printStrings('Services', services);
+}

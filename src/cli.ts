@@ -9,6 +9,7 @@ import {
     run,
     config,
     stages,
+    services,
 } from './commands';
 
 program
@@ -70,6 +71,11 @@ program
     .command('stages')
     .description('Get all available stages')
     .action(() => stages(program.opts()));
+
+program
+    .command('services')
+    .description('Get all available services')
+    .action(() => services(program.opts()));
 
 program.parse();
 

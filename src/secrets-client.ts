@@ -14,6 +14,7 @@ export interface SecretsClient {
     remove(name: string): Promise<boolean>;
     list(): Promise<Secret[]>;
     stages(): Promise<string[]>;
+    services(): Promise<string[]>;
     key(name: string): string;
 }
 

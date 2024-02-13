@@ -98,6 +98,22 @@ export class SecretsClientSSM implements SecretsClient {
         return stages;
     }
 
+    async services(): Promise<string[]> {
+        const res = await this.ssm.send(
+            new GetParametersByPathCommand({ Path: '/eg2', Recursive: true }),
+        );
+        const services: string[] = [];
+
+        res.Parameters.forEach((p) => {
+            const service = p.Name.split('/')[2];
+            if (!services.includes(service)) {
+                services.push(service);
+            }
+        });
+
+        return services;
+    }
+
     nameFromPath(name: string): string {
         return name.split('/').pop();
     }
