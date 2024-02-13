@@ -36,7 +36,14 @@ program
     .command('list')
     .alias('ls')
     .description('List all environment variables')
-    .action(() => list(program.opts()));
+    .option(
+        '-p, --pattern <pattern>',
+        'Glob pattern to match secret names against',
+        '*',
+    )
+    .action((options) => {
+        list(program.opts(), options);
+    });
 
 program
     .command('remove')

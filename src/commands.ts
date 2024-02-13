@@ -1,3 +1,4 @@
+import pm from 'picomatch';
 import { dirExists, printSecrets, printStrings } from './util';
 import { useSecretsClient, type EnvironmentOptions } from './secrets-client';
 import { CACHE_DIR, DEFAULTS_FILE, Placeholder, options } from './config';
@@ -61,11 +62,15 @@ export async function get(name: string, opts: EnvironmentOptions) {
     console.log(secret.value);
 }
 
-export async function list(opts: EnvironmentOptions) {
+type ListOptions = { pattern: string };
+
+export async function list(opts: EnvironmentOptions, listOpts: ListOptions) {
     const env = await options(opts);
     const client = useSecretsClient(env);
 
-    const secrets = await client.list();
+    const all = await client.list();
+    const isMatch = pm(listOpts.pattern);
+    const secrets = all.filter((s) => isMatch(s.name));
 
     if (secrets.length === 0) {
         console.log(`No serets set for stage "${env.stage}"`);
