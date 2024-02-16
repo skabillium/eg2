@@ -104,7 +104,7 @@ export async function load(path: string, opts: EnvironmentOptions) {
 
     const variables = parse(envfile);
     let totalVars = 0;
-    for (let name in variables) {
+    for (const name in variables) {
         await client.set(name, variables[name]);
         totalVars++;
     }
