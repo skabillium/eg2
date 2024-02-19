@@ -62,7 +62,14 @@ program
     .command('export')
     .description('Export environment to .env file')
     .argument('<path>', 'Path for exported .env file')
-    .action((path: string) => exportEnv(path, program.opts()));
+    .option(
+        '-p, --pattern <pattern>',
+        'Glob pattern to match secret names against',
+        '*',
+    )
+    .action((path: string, options) =>
+        exportEnv(path, program.opts(), options),
+    );
 
 program
     .command('run [cmd...]')

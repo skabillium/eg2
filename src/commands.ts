@@ -3,6 +3,8 @@ import { dirExists, printSecrets, printStrings } from './util';
 import { useSecretsClient, type EnvironmentOptions } from './secrets-client';
 import { CACHE_DIR, DEFAULTS_FILE, Placeholder, options } from './config';
 
+type FilterOptions = { pattern: string };
+
 export async function config() {
     // Get input for default stage
     const readline = await import('readline/promises');
@@ -62,14 +64,15 @@ export async function get(name: string, opts: EnvironmentOptions) {
     console.log(secret.value);
 }
 
-type ListOptions = { pattern: string };
-
-export async function list(opts: EnvironmentOptions, listOpts: ListOptions) {
+export async function list(
+    opts: EnvironmentOptions,
+    filterOpts: FilterOptions,
+) {
     const env = await options(opts);
     const client = useSecretsClient(env);
 
     const all = await client.list();
-    const isMatch = pm(listOpts.pattern);
+    const isMatch = pm(filterOpts.pattern);
     const secrets = all.filter((s) => isMatch(s.name));
 
     if (secrets.length === 0) {
@@ -112,17 +115,21 @@ export async function load(path: string, opts: EnvironmentOptions) {
     console.log(`Successfully uploaded ${totalVars} environment variables`);
 }
 
-export async function exportEnv(path: string, opts: EnvironmentOptions) {
+export async function exportEnv(
+    path: string,
+    opts: EnvironmentOptions,
+    filterOpts: FilterOptions,
+) {
     const env = await options(opts);
     const client = useSecretsClient(env);
 
     const { writeFile } = await import('fs/promises');
 
-    const secrets = await client.list();
-    const content = secrets.reduce<string>(
-        (c, s) => c + `${s.name}="${s.value}"\n`,
-        '',
-    );
+    const all = await client.list();
+    const isMatch = pm(filterOpts.pattern);
+    const content = all
+        .filter((secret) => isMatch(secret.name))
+        .reduce<string>((c, s) => c + `${s.name}="${s.value}"\n`, '');
 
     await writeFile(path, content, 'utf8');
     console.log('Exported environment to', path);
