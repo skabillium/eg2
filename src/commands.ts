@@ -1,4 +1,4 @@
-import pm from 'picomatch';
+import { isMatch } from 'picomatch';
 import { dirExists, printSecrets, printStrings } from './util';
 import { useSecretsClient, type EnvironmentOptions } from './secrets-client';
 import { CACHE_DIR, DEFAULTS_FILE, Placeholder, options } from './config';
@@ -73,11 +73,10 @@ export async function list(
     const client = useSecretsClient(env);
 
     const all = await client.list();
-    const isMatch = pm(listOpts.pattern);
-    const secrets = all.filter((s) => isMatch(s.name));
+    const secrets = all.filter((s) => isMatch(s.name, listOpts.pattern));
 
     if (secrets.length === 0) {
-        console.log(`No serets set for stage "${env.stage}"`);
+        console.log(`No secrets set for stage "${env.stage}"`);
         return;
     }
 
@@ -132,9 +131,8 @@ export async function exportEnv(
     const { writeFile } = await import('fs/promises');
 
     const all = await client.list();
-    const isMatch = pm(filterOpts.pattern);
     const content = all
-        .filter((secret) => isMatch(secret.name))
+        .filter((secret) => isMatch(secret.name, filterOpts.pattern))
         .reduce<string>((c, s) => c + `${s.name}="${s.value}"\n`, '');
 
     await writeFile(path, content, 'utf8');
