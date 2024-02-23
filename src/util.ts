@@ -1,4 +1,5 @@
 import type { Secret } from './secrets-client';
+
 /**
  * Check if a given directory exists in the file system
  * @param path Path to check

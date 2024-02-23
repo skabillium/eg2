@@ -64,19 +64,25 @@ export async function get(name: string, opts: EnvironmentOptions) {
     console.log(secret.value);
 }
 
+type ListOptions = { raw: boolean };
 export async function list(
     opts: EnvironmentOptions,
-    filterOpts: FilterOptions,
+    listOpts: FilterOptions & ListOptions,
 ) {
     const env = await options(opts);
     const client = useSecretsClient(env);
 
     const all = await client.list();
-    const isMatch = pm(filterOpts.pattern);
+    const isMatch = pm(listOpts.pattern);
     const secrets = all.filter((s) => isMatch(s.name));
 
     if (secrets.length === 0) {
         console.log(`No serets set for stage "${env.stage}"`);
+        return;
+    }
+
+    if (listOpts.raw) {
+        secrets.map((secret) => console.log(`${secret.name}=${secret.value}`));
         return;
     }
 

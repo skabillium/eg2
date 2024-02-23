@@ -41,6 +41,11 @@ program
         'Glob pattern to match secret names against',
         '*',
     )
+    .option(
+        '-r, --raw',
+        'Output envirnonment with env format for use in other commands',
+        false,
+    )
     .action((options) => {
         list(program.opts(), options);
     });
