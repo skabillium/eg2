@@ -1,3 +1,4 @@
+import { readFile } from 'fs/promises';
 import { userInfo } from 'os';
 import { join } from 'path';
 import { loadConfig } from 'c12';
@@ -28,9 +29,12 @@ const EnvironmentValidator: Validator<EnvironmentOptions> = {
  */
 async function useCache() {
     try {
-        const { default: cached } = await import(
-            join(process.cwd(), '.eg2/defaults.json')
+        const content = await readFile(
+            join(process.cwd(), '.eg2/defaults.json'),
+            'utf-8',
         );
+        const cached = JSON.parse(content);
+
         return cached;
     } catch (err) {
         return null;
