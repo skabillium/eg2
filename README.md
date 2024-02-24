@@ -45,6 +45,14 @@ Run a command with a specified environment:
 eg2 run --stage production node app.js
 ```
 
+You can use the `--raw` or `-r` option when listing the secrets for a stage to output them to stdout
+as an env file. The following command using the unix `env` command to run a script loading an
+environment:
+
+```sh
+env $(eg2 list --raw) node app.js
+```
+
 Run `eg2 --help` for a more detailed specification.
 
 ## How it works
