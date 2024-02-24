@@ -1,6 +1,6 @@
 {
   "name": "eg2",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "CLI for managing cloud secrets",
   "homepage": "https://github.com/skabillium/eg2",
   "license": "MIT",
