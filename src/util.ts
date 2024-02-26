@@ -15,6 +15,26 @@ export async function dirExists(path: string) {
 }
 
 /**
+ * Convert a string to pascal case
+ * @example
+ * toPascalCase("hello world") // "HelloWorld"
+ * toPascalCase("snake_case")  // "SnakeCase"
+ * toPascalCase("kebab-case")  // "KebabCase"
+ * toPascalCase("camelCase")   // "CamelCase"
+ */
+export function toPascalCase(str: string) {
+    return str
+        .toLowerCase()
+        .replace(new RegExp(/[-_]+/, 'g'), ' ')
+        .replace(new RegExp(/[^\w\s]/, 'g'), '')
+        .replace(
+            new RegExp(/\s+(.)(\w*)/, 'g'),
+            ($1, $2, $3) => `${$2.toUpperCase() + $3}`,
+        )
+        .replace(new RegExp(/\w/), (s) => s.toUpperCase());
+}
+
+/**
  * Print a list of secrets as a table on the command line
  * @param secrets List of secrets
  */
