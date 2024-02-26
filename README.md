@@ -55,6 +55,28 @@ env $(eg2 list --raw) node app.js
 
 Run `eg2 --help` for a more detailed specification.
 
+## Type safety
+
+If you want to include the secret types in your `process.env` run `eg2 types path/to/your/file.ts`.
+This will create a file in the specified path with all the type declarations for your secrets.
+
+```typescript
+export type ServiceSecrets = {
+    BACKEND_URL: string;
+    DB_URL: string;
+    CACHE_URL: string;
+};
+
+declare global {
+    namespace NodeJS {
+        interface ProcessEnv extends PackServiceSecrets {}
+    }
+}
+```
+
+If you don't want to attach the secrets' types to the `process.env` object run the command with the
+`--no-global` option.
+
 ## How it works
 
 The cli uses AWS SSM to store environment variables. Since SSM is a key value store each application's
