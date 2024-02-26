@@ -10,6 +10,7 @@ import {
     config,
     stages,
     services,
+    exportTypes,
 } from './commands';
 
 program
@@ -17,7 +18,7 @@ program
     .description('Cloud environment manager for AWS SSM')
     .option('--stage <stage>', 'Specify the stage for the command')
     .option('--service <service>', 'Specify the service for the command')
-    .version('0.7.0');
+    .version('0.8.0');
 
 program
     .command('set')
@@ -74,6 +75,15 @@ program
     )
     .action((path: string, options) =>
         exportEnv(path, program.opts(), options),
+    );
+
+program
+    .command('types')
+    .description('Export the types for an environment as a Typescript file')
+    .argument('<path>', 'Path for types file')
+    .option('--no-global', 'Skip global declaration when creating file')
+    .action((path: string, options) =>
+        exportTypes(path, program.opts(), options),
     );
 
 program

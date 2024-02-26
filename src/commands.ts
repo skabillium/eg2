@@ -1,5 +1,6 @@
+import fs from 'fs';
 import { isMatch } from 'picomatch';
-import { dirExists, printSecrets, printStrings } from './util';
+import { dirExists, printSecrets, printStrings, toPascalCase } from './util';
 import { useSecretsClient, type EnvironmentOptions } from './secrets-client';
 import { CACHE_DIR, DEFAULTS_FILE, Placeholder, options } from './config';
 
@@ -137,6 +138,40 @@ export async function exportEnv(
 
     await writeFile(path, content, 'utf8');
     console.log('Exported environment to', path);
+}
+
+type ExportTypesOptions = { global: boolean };
+export async function exportTypes(
+    typesPath: string,
+    opts: EnvironmentOptions,
+    exportTypeOptions: ExportTypesOptions,
+) {
+    const env = await options(opts);
+    const client = useSecretsClient(env);
+
+    if (!typesPath.endsWith('.ts')) {
+        typesPath += '.ts';
+    }
+
+    const secrets = await client.list();
+    const file = fs.createWriteStream(typesPath, 'utf-8');
+    const secretsTypeName = toPascalCase(env.service) + 'Secrets';
+
+    file.write(`export type ${secretsTypeName} = {\n`);
+    secrets.forEach((s) => file.write(`   ${s.name}: string;\n`));
+    file.write('}\n');
+
+    if (exportTypeOptions.global) {
+        file.write(`
+declare global {
+    namespace NodeJS {
+        interface ProcessEnv extends ${secretsTypeName} {}
+    }
+}`);
+    }
+
+    file.close();
+    console.log(`Generated types for stage "${env.stage}" in ${typesPath}`);
 }
 
 export async function run(args: string[], opts: EnvironmentOptions) {
